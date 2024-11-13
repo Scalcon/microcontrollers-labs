@@ -37,19 +37,17 @@
 									; função <func>
 		IMPORT  PLL_Init
 		IMPORT  SysTick_Init
-		IMPORT  SysTick_Wait1ms			
+		IMPORT  SysTick_Wait1ms	
+		IMPORT	SysTick_Wait
 		IMPORT  GPIO_Init
-        IMPORT  PortN_Output
-        IMPORT  PortJ_Input	
+		IMPORT	StoreDisplayAddress
 		IMPORT  DisplayValue	
 		IMPORT  CheckStepButton
 		IMPORT  CheckDirectionButton
 		IMPORT	SYSCTL_RCGCGPIO_R
 		IMPORT	SYSCTL_PRGPIO_R
-	
-		IMPORT	GPIO_PORTA_AHB_DIR_R
-		IMPORT	GPIO_PORTB_AHB_DIR_R
 
+			
 ; -------------------------------------------------------------------------------
 ; Função main()
 Start
@@ -58,39 +56,37 @@ Start
 	BL SysTick_Init
 	BL GPIO_Init                 
 
-    LDR R0, =SYSCTL_RCGCGPIO_R    
-    MOV R1, #0x23                 
-    STR R1, [R0]
-
-WaitForClock
-    LDR R0, =SYSCTL_PRGPIO_R
-    LDR R1, [R0]
-    TST R1, #0x23
-    BEQ WaitForClock
-
-    LDR R0, =GPIO_PORTA_AHB_DIR_R
-    MOV R1, #0xFF                 
-    STR R1, [R0]
-
-    LDR R0, =GPIO_PORTB_AHB_DIR_R
-    MOV R1, #0x30                
-    STR R1, [R0]
+	BL StoreDisplayAddress
 
     MOV R2, #0                    
     MOV R3, #1                    
-    MOV R4, #1                    
+    MOV R6, #1
+	MOV R7, #1
+	MOV R8, #0
 
 MainLoop
     
-    BL DisplayValue 
+    BL DisplayValue
+	MOV R0, #2_1111111
+	BL SysTick_Wait
+	BL DisplayValue
+
     BL CheckStepButton     
     BL CheckDirectionButton     
 	
-    ADD R2, R2, R3, LSL #0        
-    CMP R2, #100
-    BLT ContinueCounting
-    MOV R2, #0                     
+    ADD R8, R8, R6, LSL #0        
+    CMP R8, #100
+    BEQ ResetIncreasing
+	CMP R8, #0
+	BEQ ResetDecreasing
 ContinueCounting
     B MainLoop
+
+ResetIncreasing
+	MOV R8, #0
+	BL ContinueCounting
+ResetDecreasing
+	MOV R8, #100
+	BL ContinueCounting
 
     END

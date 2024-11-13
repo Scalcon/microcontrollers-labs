@@ -2,50 +2,93 @@
 
 		AREA    |.text|, CODE, READONLY, ALIGN=2
 
-		IMPORT GPIO_PORTB_AHB_DATA_R
-		IMPORT GPIO_PORTA_AHB_DATA_R
-		IMPORT  SysTick_Wait1ms		
+		IMPORT PortA_Output
+		IMPORT PortB_Output
+		IMPORT PortQ_Output
+		IMPORT SysTick_Wait1ms
+		IMPORT SysTick_Wait1us
+		IMPORT SysTick_Wait	
 
-		EXPORT DisplayValue			
+		EXPORT DisplayValue
+		EXPORT StoreDisplayAddress			
+
+SEVEN_SEG_DECODER EQU 0x20000A00
+
+StoreDisplayAddress
+    LDR R0, =SEVEN_SEG_DECODER
+    MOV R1, #0x3F
+    STR R1, [R0]               ; Store at SEVEN_SEG_DECODER base address
+    MOV R1, #0x06
+    STR R1, [R0, #1]           ; Store at SEVEN_SEG_DECODER + 1
+    MOV R1, #0x5B
+    STR R1, [R0, #2]           ; Store at SEVEN_SEG_DECODER + 2
+    MOV R1, #0x4F
+    STR R1, [R0, #3]           ; Store at SEVEN_SEG_DECODER + 3
+    MOV R1, #0x66
+    STR R1, [R0, #4]           ; Store at SEVEN_SEG_DECODER + 4
+    MOV R1, #0x6D
+    STR R1, [R0, #5]           ; Store at SEVEN_SEG_DECODER + 5
+    MOV R1, #0x7D
+    STR R1, [R0, #6]           ; Store at SEVEN_SEG_DECODER + 6
+    MOV R1, #0x07
+    STR R1, [R0, #7]           ; Store at SEVEN_SEG_DECODER + 7
+    MOV R1, #0x7F
+    STR R1, [R0, #8]           ; Store at SEVEN_SEG_DECODER + 8
+    MOV R1, #0x6F
+    STR R1, [R0, #9]           ; Store at SEVEN_SEG_DECODER + 9
+
+    BX LR
+
+;Segundo
+;	MOV R0, #10000
+;    BL SysTick_Wait
+    ;BL SysTick_Wait
+    ;BL SysTick_Wait
+	;BL SysTick_Wait
+	;BL SysTick_Wait
 
 DisplayValue
-    PUSH {R0, R1, R2, R3, R4, R5}
+    PUSH {R0, R1, R8, R3, R4, R5, LR}
 
-    MOV R0, R2              
+    MOV R0, R8              
     MOV R1, #10
     UDIV R3, R0, R1         
     MLS R4, R3, R1, R0      
-
-    BL DisplayDigit
-    LDR R0, =GPIO_PORTB_AHB_DATA_R
-    MOV R1, #0x10           
-    STR R1, [R0]
-    BL SysTick_Wait1ms			             
-    MOV R1, #0x00           
-    STR R1, [R0]
-
-    MOV R0, R4              
-    BL DisplayDigit
-    LDR R0, =GPIO_PORTB_AHB_DATA_R
-    MOV R1, #0x20           
-    STR R1, [R0]
-    BL SysTick_Wait1ms			             
-    MOV R1, #0x00           
-    STR R1, [R0]
-
-    POP {R0-R5}             
-    BX LR                   
-
-DisplayDigit
-    LDR R1, =SegmentMap     
-    LDRB R2, [R1, R0]      
-    LDR R3, =GPIO_PORTA_AHB_DATA_R
-    STR R2, [R3]            
-
-    BX LR                   
+	
+	MOV R0, #2_00010000
+    BL	PortB_Output
+	MOV R5, R3
+    LDR R1, =SEVEN_SEG_DECODER
+	ADD R1, R1, R5
+    LDRB R0, [R1]
+	BL PortA_Output
+	BL PortQ_Output
+	
+	MOV R0, #2_11111
+	BL SysTick_Wait
 	
 	
-SegmentMap DCB 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F
+	MOV R0, #2_0100000
+    BL	PortB_Output
+    MOV R5, R4              
+    LDR R1, =SEVEN_SEG_DECODER
+	ADD R1, R1, R5
+    LDRB R0, [R1]
+	BL PortA_Output
+	BL PortQ_Output
+
+	MOV R0, #2_11111111
+	BL SysTick_Wait
+	BL SysTick_Wait
+	BL SysTick_Wait
+
+
+
+	;MOV R0, #2_0110000
+    ;BL	PortB_Output
+	
+    POP {R0, R1, R8, R3, R4, R5, LR}             
+    BX LR                   
 
 	ALIGN
 	END
