@@ -4,6 +4,7 @@
 
 		IMPORT PortA_Output
 		IMPORT PortB_Output
+		IMPORT PortP_Output	
 		IMPORT PortQ_Output
 		IMPORT SysTick_Wait1ms
 		IMPORT SysTick_Wait1us
@@ -39,23 +40,29 @@ StoreDisplayAddress
 
     BX LR
 
-;Segundo
-;	MOV R0, #10000
-;    BL SysTick_Wait
-    ;BL SysTick_Wait
-    ;BL SysTick_Wait
-	;BL SysTick_Wait
-	;BL SysTick_Wait
-
 DisplayValue
     PUSH {R0, R1, R8, R3, R4, R5, LR}
+	
+	MOV R0, #2_000000
+	BL PortB_Output
+	MOV R0, #2_100000
+	BL PortP_Output
+	MOV R0, R8
+	BL PortQ_Output
+	BL PortA_Output
 
+	MOV R0, #100
+	BL SysTick_Wait1ms
+
+
+	MOV R0, #2_000000
+	BL PortP_Output
     MOV R0, R8              
     MOV R1, #10
     UDIV R3, R0, R1         
     MLS R4, R3, R1, R0      
 	
-	MOV R0, #2_00010000
+	MOV R0, #2_10000
     BL	PortB_Output
 	MOV R5, R3
     LDR R1, =SEVEN_SEG_DECODER
@@ -64,11 +71,10 @@ DisplayValue
 	BL PortA_Output
 	BL PortQ_Output
 	
-	MOV R0, #2_11111
-	BL SysTick_Wait
+	MOV R0, #100
+	BL SysTick_Wait1ms
 	
-	
-	MOV R0, #2_0100000
+	MOV R0, #2_100000
     BL	PortB_Output
     MOV R5, R4              
     LDR R1, =SEVEN_SEG_DECODER
@@ -76,16 +82,9 @@ DisplayValue
     LDRB R0, [R1]
 	BL PortA_Output
 	BL PortQ_Output
-
-	MOV R0, #2_11111111
-	BL SysTick_Wait
-	BL SysTick_Wait
-	BL SysTick_Wait
-
-
-
-	;MOV R0, #2_0110000
-    ;BL	PortB_Output
+	
+	MOV R0, #100
+	BL SysTick_Wait1ms
 	
     POP {R0, R1, R8, R3, R4, R5, LR}             
     BX LR                   

@@ -6,18 +6,15 @@
 		EXPORT CheckDirectionButton
 
 CheckDirectionButton
-    PUSH {R0, R1, R6, LR}
-		
-    BL	PortJ_Input
-    LDR R1, = 2_000000          
-	TST R0, R1
+    PUSH {LR}   
+	CMP R0, #2_01
 	BNE	Continue          
 
 ButtonPress
-    RSB R6, R6, #0                   
+    NEG R6, R6                 
 
 Continue
-    POP {R0, R1, R6, LR}           
+    POP {LR}           
     BX LR               
                          
 	ALIGN

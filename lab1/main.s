@@ -46,6 +46,7 @@
 		IMPORT  CheckDirectionButton
 		IMPORT	SYSCTL_RCGCGPIO_R
 		IMPORT	SYSCTL_PRGPIO_R
+		IMPORT PortJ_Input
 
 			
 ; -------------------------------------------------------------------------------
@@ -67,18 +68,21 @@ Start
 MainLoop
     
     BL DisplayValue
-	MOV R0, #2_1111111
-	BL SysTick_Wait
-	BL DisplayValue
-
+	
+ButtonPress
+	BL PortJ_Input
+	CMP R0, #2_00000011
+	BEQ NoButtonPress
+	
     BL CheckStepButton     
     BL CheckDirectionButton     
 	
+NoButtonPress	
     ADD R8, R8, R6, LSL #0        
     CMP R8, #100
-    BEQ ResetIncreasing
+    BGE ResetIncreasing
 	CMP R8, #0
-	BEQ ResetDecreasing
+	BLS ResetDecreasing
 ContinueCounting
     B MainLoop
 
@@ -86,7 +90,7 @@ ResetIncreasing
 	MOV R8, #0
 	BL ContinueCounting
 ResetDecreasing
-	MOV R8, #100
+	MOV R8, #99
 	BL ContinueCounting
 
     END
