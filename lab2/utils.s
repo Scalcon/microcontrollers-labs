@@ -238,6 +238,7 @@ NVIC_ST_CURRENT_R     EQU 0xE000E018
 ; -------------------------------------------------------------------------------------------------------------------------	
         EXPORT  SysTick_Init
 		EXPORT  SysTick_Wait1ms
+		EXPORT  SysTick_Wait1us
 		EXPORT  SysTick_Wait
 ;------------SysTick_Init------------
 ; Configura o sistema para utilizar o SysTick para delays
@@ -303,7 +304,7 @@ SysTick_Wait1ms_done
 ; Saída: Não tem
 ; Modifica: R0
 DELAY1US EQU 80    ; número de ciclos de clock para contar 1ms (assumindo 80 MHz)
-	               ; 80000 x 12,5 ns = 1 ms
+	               ; 80 x 12,5 ns = 1 us
 
 SysTick_Wait1us
 	PUSH {R4, LR} 						; salva o valor atual de R4 e Link Register

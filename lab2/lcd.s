@@ -108,7 +108,7 @@ LCD_Data
 ; Parametro de entrada: Não tem
 ; Parametro de saída: Não tem
 LCD_Line2
-	PUSH {LR}
+	PUSH {LR, R3}
 	
 	MOV R3, #0xC0		; Endereço da primeira posição - Segunda Linha
 	BL LCD_Instruction
@@ -116,7 +116,7 @@ LCD_Line2
 	MOV R0, #10			; Delay de 10ms para executar (bem mais do que os 40us ou 1,64ms necess?rios)
 	BL SysTick_Wait1ms
 	
-	POP {LR}
+	POP {LR, R3}
 	BX LR
 
 ; Funções LCD_PrintString, LCD_PrintChar e LCD_EndOfString
@@ -124,21 +124,22 @@ LCD_Line2
 ; Parametro de entrada: R4 -> A string a ser escrita
 ; Parametro de sa?da: Nao tem
 LCD_PrintString
-	PUSH {LR}
+	PUSH {LR, R0}
 LCD_PrintChar
+	CMP	R4, #0
+	BEQ Imprime
 	LDRB R3, [R4], #1	; Le um caractere da string e desloca para o proximo
-	
 	CMP R3, #0			; Verifica se chegou no final da string
 	BEQ LCD_EndOfString
-	
+Imprime
 	BL LCD_Data			; Escreve o caractere
-	
-	B LCD_PrintChar		; Continua iterando sobre a string ate chegar no fim
+	CMP	R4, #0
+	BNE LCD_PrintChar		; Continua iterando sobre a string ate chegar no fim
 LCD_EndOfString
 	MOV R0, #10			; Delay de 10ms para executar (bem mais do que os 40us ou 1,64ms necessarios)
 	BL SysTick_Wait1ms
 	
-	POP {LR}			; A string foi escrita. Retorna
+	POP {LR, R0}			; A string foi escrita. Retorna
 	BX LR
 
 ; Função LCD_Reset

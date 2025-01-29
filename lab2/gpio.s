@@ -10,14 +10,6 @@
 INVALID_DIGIT			EQU 256 ; Representa um d?gito inv?lido do teclado matricial
 INVALID_PW_CHAR			EQU -1	; Representa um caractere impossível de estar na senha
 
-INICIO  				EQU 0
-CONFIG_SENHA 			EQU 1
-COFRE_FECHANDO 			EQU 2
-COFRE_FECHADO 			EQU 3
-COFRE_ABRINDO           EQU 4
-COFRE_TRAVADO           EQU 5
-DESTRAVA_COFRE          EQU 6
-CONFIG_SENHA_MESTRA     EQU 7
 ; ========================
 ; Defini??es dos Registradores Gerais
 ; All register values were taken from tm4c1294ncpdt.h - TM4C1294NCPDT Register Definitions
@@ -138,15 +130,15 @@ NVIC_EN1_R					EQU    0xE000E104
 		EXPORT PortJ_Input          ; Permite chamar PortJ_Input de outro arquivo
 		EXPORT PortK_Output			; Permite chamar PortK_Output de outro arquivo
 		EXPORT PortL_Input			; Permite chamar PortL_Input de outro arquivo
+		EXPORT PortM_Input			; Permite chamar PortM_Input de outro arquivo
 		EXPORT PortM_Output			; Permite chamar PortM_Output de outro arquivo
 		EXPORT PortP_Output			; Permite chamar PortP_Output de outro arquivo
 		EXPORT PortQ_Output			; Permite chamar PortQ_Output de outro arquivo
-		EXPORT GPIOPortJ_Handler	; Permite chamar GPIOPortJ_Handler de outro arquivo
 		EXPORT LED_Output
+		EXPORT PortM_Change_Dir		; Permite chamar PortM_Change_Dir de outro arquivo
 
 		; Se chamar alguma fun??o externa
-		IMPORT ModificaSenhaMestra
-		IMPORT DestravaCofre
+
 		IMPORT Pisca_Transistor_PP5
 		
 
@@ -246,7 +238,7 @@ EsperaGPIO  LDR     R1, [R0]						; L? da mem?ria o conte?do do endere?o do regi
             STR     R1, [R0]						; Guarda no registrador
 			
 			LDR     R0, =GPIO_PORTM_DIR_R			; Carrega o R0 com o endere?o do DIR para a porta M
-			MOV     R1, #2_11110111					; PM7:PM4 e PM2:PM0
+			MOV     R1, #2_00000111					; PM7:PM4 e PM2:PM0
             STR     R1, [R0]						; Guarda no registrador
 			
 			LDR     R0, =GPIO_PORTP_DIR_R			; Carrega o R0 com o endere?o do DIR para a porta P
@@ -387,28 +379,6 @@ PortJ_Input
 	LDR R0, [R1]                            ; L? no barramento de dados dos pinos
 	BX LR									; Retorna
 
-; Fun??o GPIOPortJ_Handler
-; Par?metro de entrada: N?o tem
-; Par?metro de sa?da: R0 --> o valor a ser atualizado
-GPIOPortJ_Handler
-	LDR R1, =GPIO_PORTJ_RIS_R
-	LDR R0, [R1]
-	
-	CMP R0, #1
-	IT EQ
-		MOVEQ R5, #DESTRAVA_COFRE
-	
-	CMP R0, #2
-	PUSH {LR}
-	BLEQ ModificaSenhaMestra
-	POP {LR}
-	
-	LDR R1, =GPIO_PORTJ_ICR_R				; Configura a interrup??o na porta PJ0
-	MOV R0, #2_00000011
-	STR R0, [R1]
-	
-	BX LR 									; Retorna
-
 ; Fun??o PortK_Output
 ; Par?metro de entrada: R0
 ; Par?metro de sa?da:  N?o tem
@@ -439,8 +409,30 @@ PortM_Output
 	BIC R2, #2_11110111						; M?scara com bits 1 nas posi??es que queremos limpar PM7:PM4 e PM3:PM0
 	ORR R0, R0, R2                          ; Fazer o OR do lido pela porta com o par?metro de entrada
 	STR R0, [R1]                            ; Escreve na porta M
-	BX LR									; Retorna
+	BX LR
+	
+; Retorna
+; Funcao PortM_Change_Dir
+; Parametro de entrada: R0
+; Parametro de saida: Nao tem
+PortM_Change_Dir
+    LDR R1, =GPIO_PORTM_DIR_R         ; Endereço do registrador de direção da porta M
+	;	Read-Modify-Write para escrita
+    LDR R2, [R1]                      ; Lê o valor atual da direção das portas
+    AND R2, #2_00000111				  ; Limpa as colunas PM7 a PM4 (para garantir que todas as colunas começam com direção de entrada)
+    ORR R2, R0                        ; OR com a máscara que foi passada em R0 (direção desejada)
+    STR R2, [R1]                      ; Atualiza o registrador de direção com o novo valor
 
+    BX LR                             ; Retorna da função
+
+; Funcao PortM_Input
+; Parametro de entrada: Nao tem
+; Parametro de saida: R0 -- valor da leitura
+PortM_Input
+	LDR	R1, =GPIO_PORTM_DATA_R		    	; Carrega o valor do offset do data register
+	LDR R0, [R1]                            ; L? no barramento de dados dos pinos
+	BX LR	
+	
 ; Fun??o PortP_Output
 ; Par?metro de entrada: R0
 ; Par?metro de sa?da:  N?o tem
